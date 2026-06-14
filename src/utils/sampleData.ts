@@ -1,48 +1,58 @@
 import { Block, Category, RepeatType } from "@/types";
 
-export const sampleBlocks: Block[] = [
-  {
-    id: "block-uyqu",
-    emoji: "😴",
-    name: "Uyqu",
-    category: Category.DamOlish,
-    color: "#6366f1",
-    durationSlots: 32,
-    startSlot: 0,
-    shape: { cols: 1, rows: 32 },
-    repeat: RepeatType.HarKuni,
-  },
-  {
-    id: "block-ish",
-    emoji: "💻",
-    name: "Ish",
-    category: Category.Ish,
-    color: "#0ea5e9",
-    durationSlots: 16,
-    startSlot: 36,
-    shape: { cols: 1, rows: 16 },
-    repeat: RepeatType.IshKunlari,
-  },
-  {
-    id: "block-ovqat",
-    emoji: "🍽",
-    name: "Ovqat",
-    category: Category.Ovqat,
-    color: "#f59e0b",
-    durationSlots: 2,
-    startSlot: 52,
-    shape: { cols: 1, rows: 2 },
-    repeat: RepeatType.HarKuni,
-  },
-  {
-    id: "block-sport",
-    emoji: "🏃",
-    name: "Sport",
-    category: Category.Sport,
-    color: "#10b981",
-    durationSlots: 4,
-    startSlot: 72,
-    shape: { cols: 1, rows: 4 },
-    repeat: RepeatType.HarKuni,
-  },
-];
+export function todayStr(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export function getSampleBlocks(date: string): Block[] {
+  return [
+    {
+      id: `block-uyqu-${date}`,
+      emoji: "😴",
+      name: "Uyqu",
+      category: Category.DamOlish,
+      color: "#6366f1",
+      durationSlots: 32,
+      startSlot: 0,
+      shape: { cols: 1, rows: 32 },
+      repeat: RepeatType.HarKuni,
+      date,
+    },
+    {
+      id: `block-ish-${date}`,
+      emoji: "💻",
+      name: "Ish",
+      category: Category.Ish,
+      color: "#0ea5e9",
+      durationSlots: 16,
+      startSlot: 36,
+      shape: { cols: 1, rows: 16 },
+      repeat: RepeatType.IshKunlari,
+      date,
+    },
+    {
+      id: `block-ovqat-${date}`,
+      emoji: "🍽",
+      name: "Ovqat",
+      category: Category.Ovqat,
+      color: "#f59e0b",
+      durationSlots: 2,
+      startSlot: 52,
+      shape: { cols: 1, rows: 2 },
+      repeat: RepeatType.HarKuni,
+      date,
+    },
+    {
+      id: `block-sport-${date}`,
+      emoji: "🏃",
+      name: "Sport",
+      category: Category.Sport,
+      color: "#10b981",
+      durationSlots: 4,
+      startSlot: 56,
+      shape: { cols: 1, rows: 4 },
+      repeat: RepeatType.HarKuni,
+      date,
+    },
+  ];
+}
