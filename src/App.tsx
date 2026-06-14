@@ -8,8 +8,10 @@ import NotFound from "@/pages/not-found";
 import TimeGrid from "@/components/Grid/TimeGrid";
 import DayHeader from "@/components/Header/DayHeader";
 import CreateBlockModal from "@/components/Modal/CreateBlockModal";
+import EditBlockModal from "@/components/Modal/EditBlockModal";
 import WeekCalendar from "@/components/Calendar/WeekCalendar";
 import { useBlocks } from "@/hooks/useBlocks";
+import { Block } from "@/types";
 
 const queryClient = new QueryClient();
 
@@ -19,8 +21,11 @@ function todayStr() {
 
 function Home() {
   const [selectedDate, setSelectedDate] = useState(todayStr());
-  const [modalOpen, setModalOpen] = useState(false);
-  const { blocks, loading, addBlock, updateBlocks, removeBlock } = useBlocks(selectedDate);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editingBlock, setEditingBlock] = useState<Block | null>(null);
+
+  const { blocks, loading, addBlock, updateBlocks, removeBlock, editBlock } =
+    useBlocks(selectedDate);
 
   if (loading) {
     return (
@@ -40,25 +45,22 @@ function Home() {
         overflow: "hidden",
       }}
     >
-      {/* Header */}
       <DayHeader blocks={blocks} syncStatus="idle" selectedDate={selectedDate} />
-
-      {/* Haftalik calendar */}
       <WeekCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
 
-      {/* Grid — qolgan joy */}
       <div className="flex-1 relative min-h-0">
         <TimeGrid
           blocks={blocks}
           onBlocksChange={updateBlocks}
           onRemoveBlock={removeBlock}
+          onEditBlock={setEditingBlock}
         />
       </div>
 
       {/* FAB */}
       <motion.button
         whileTap={{ scale: 0.88 }}
-        onClick={() => setModalOpen(true)}
+        onClick={() => setCreateOpen(true)}
         className="fixed bottom-6 right-5 z-30 w-14 h-14 rounded-full bg-indigo-600 shadow-lg shadow-indigo-900/60 flex items-center justify-center text-white text-3xl font-light select-none"
         style={{ touchAction: "manipulation", marginBottom: "env(safe-area-inset-bottom)" }}
       >
@@ -66,10 +68,21 @@ function Home() {
       </motion.button>
 
       <CreateBlockModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
+        isOpen={createOpen}
+        onClose={() => setCreateOpen(false)}
         onSave={addBlock}
         date={selectedDate}
+      />
+
+      <EditBlockModal
+        block={editingBlock}
+        isOpen={editingBlock !== null}
+        onClose={() => setEditingBlock(null)}
+        onSave={editBlock}
+        onDelete={(id) => {
+          removeBlock(id);
+          setEditingBlock(null);
+        }}
       />
     </div>
   );
