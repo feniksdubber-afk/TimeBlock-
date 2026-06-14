@@ -17,19 +17,19 @@ function toStr(date: Date): string {
 }
 
 export default function WeekCalendar({ selectedDate, onSelectDate }: WeekCalendarProps) {
+  const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
+
+  // FIX: todayStr dependency — har kun o'zgarishi mumkin, shu sababli har render qayta hisoblash to'g'ri
   const days = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const result = [];
+    const today = new Date(todayStr + "T00:00:00");
+    const result: Date[] = [];
     for (let i = -3; i <= 6; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       result.push(d);
     }
     return result;
-  }, []);
-
-  const todayStr = new Date().toISOString().slice(0, 10);
+  }, [todayStr]);
 
   return (
     <div className="px-3 pb-2">
