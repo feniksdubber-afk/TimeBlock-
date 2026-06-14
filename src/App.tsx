@@ -8,34 +8,55 @@ import NotFound from "@/pages/not-found";
 import TimeGrid from "@/components/Grid/TimeGrid";
 import DayHeader from "@/components/Header/DayHeader";
 import CreateBlockModal from "@/components/Modal/CreateBlockModal";
+import WeekCalendar from "@/components/Calendar/WeekCalendar";
 import { useBlocks } from "@/hooks/useBlocks";
-import { useSync } from "@/hooks/useSync";
 
 const queryClient = new QueryClient();
 
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function Home() {
-  const { syncStatus } = useSync();
-  const { blocks, loading, addBlock, updateBlocks } = useBlocks();
+  const [selectedDate, setSelectedDate] = useState(todayStr());
   const [modalOpen, setModalOpen] = useState(false);
+  const { blocks, loading, addBlock, updateBlocks } = useBlocks(selectedDate);
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full bg-[#0f0f0f] flex items-center justify-center">
+      <div className="fixed inset-0 bg-[#0f0f0f] flex items-center justify-center">
         <div className="w-6 h-6 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0f0f0f] flex flex-col relative">
-      <DayHeader blocks={blocks} syncStatus={syncStatus} />
-      <TimeGrid blocks={blocks} onBlocksChange={updateBlocks} />
+    <div
+      className="flex flex-col w-full"
+      style={{
+        minHeight: "100dvh",
+        backgroundColor: "#0f0f0f",
+        // Fix white gap at bottom
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}
+    >
+      {/* Header */}
+      <DayHeader blocks={blocks} syncStatus="idle" selectedDate={selectedDate} />
 
+      {/* Week calendar strip */}
+      <WeekCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+
+      {/* Grid — fills remaining space */}
+      <div className="flex-1 relative">
+        <TimeGrid blocks={blocks} onBlocksChange={updateBlocks} />
+      </div>
+
+      {/* FAB */}
       <motion.button
         whileTap={{ scale: 0.88 }}
         onClick={() => setModalOpen(true)}
         className="fixed bottom-6 right-5 z-30 w-14 h-14 rounded-full bg-indigo-600 shadow-lg shadow-indigo-900/60 flex items-center justify-center text-white text-3xl font-light select-none"
-        style={{ touchAction: "manipulation" }}
+        style={{ touchAction: "manipulation", marginBottom: "env(safe-area-inset-bottom)" }}
       >
         +
       </motion.button>
@@ -44,6 +65,7 @@ function Home() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onSave={addBlock}
+        date={selectedDate}
       />
     </div>
   );
