@@ -34,6 +34,7 @@ export interface Block {
   startSlot: number;
   shape: BlockShape;
   repeat: RepeatType;
+  date: string; // "YYYY-MM-DD" — qaysi kunga tegishli
 }
 
 export interface TimeSlot {
