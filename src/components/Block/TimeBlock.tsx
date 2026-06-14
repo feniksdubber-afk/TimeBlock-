@@ -8,12 +8,13 @@ const SLOT_HEIGHT = 16;
 interface TimeBlockProps {
   block: Block;
   onRemove?: (id: string) => void;
-  onClick?: () => void;
+  onEdit?: (block: Block) => void;
 }
 
-export default function TimeBlock({ block, onRemove, onClick }: TimeBlockProps) {
+export default function TimeBlock({ block, onRemove, onEdit }: TimeBlockProps) {
   const [showActions, setShowActions] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didLongPress = useRef(false);
 
   const height = block.durationSlots * SLOT_HEIGHT;
   const bgColor = hexToRgba(block.color, 0.85);
@@ -22,22 +23,26 @@ export default function TimeBlock({ block, onRemove, onClick }: TimeBlockProps) 
   const showName = block.durationSlots >= 2;
   const isRepeat = block.id.includes("__repeat__");
 
-  function handleLongPressStart() {
+  function handlePressStart() {
+    didLongPress.current = false;
     longPressTimer.current = setTimeout(() => {
+      didLongPress.current = true;
       setShowActions(true);
-    }, 500);
+    }, 450);
   }
 
-  function handleLongPressEnd() {
+  function handlePressEnd() {
     if (longPressTimer.current) clearTimeout(longPressTimer.current);
   }
 
   function handleTap() {
+    if (didLongPress.current) return;
     if (showActions) {
       setShowActions(false);
       return;
     }
-    onClick?.();
+    // Oddiy tap — tahrirlash
+    onEdit?.(block);
   }
 
   return (
@@ -68,11 +73,11 @@ export default function TimeBlock({ block, onRemove, onClick }: TimeBlockProps) 
         whileTap={{ scale: showActions ? 1 : 1.02 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
         onClick={handleTap}
-        onPointerDown={handleLongPressStart}
-        onPointerUp={handleLongPressEnd}
-        onPointerLeave={handleLongPressEnd}
-        onTouchStart={handleLongPressStart}
-        onTouchEnd={handleLongPressEnd}
+        onPointerDown={handlePressStart}
+        onPointerUp={handlePressEnd}
+        onPointerLeave={handlePressEnd}
+        onTouchStart={handlePressStart}
+        onTouchEnd={handlePressEnd}
       >
         <span className="text-sm leading-none flex-shrink-0">{block.emoji}</span>
         {showName && (
@@ -81,19 +86,31 @@ export default function TimeBlock({ block, onRemove, onClick }: TimeBlockProps) 
           </span>
         )}
         {isRepeat && showName && (
-          <span className="text-[9px] opacity-60 flex-shrink-0">↻</span>
+          <span className="text-[9px] opacity-50 flex-shrink-0">↻</span>
         )}
 
-        {/* Action tugmalar */}
+        {/* Long press action tugmalar */}
         <AnimatePresence>
           {showActions && (
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1 z-40"
+              className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1.5 z-40"
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Tahrirlash */}
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => {
+                  setShowActions(false);
+                  onEdit?.(block);
+                }}
+                className="w-7 h-7 rounded-full bg-indigo-500 flex items-center justify-center shadow-lg"
+              >
+                <span className="text-white text-xs">✎</span>
+              </motion.button>
+              {/* O'chirish */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => {
