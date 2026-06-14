@@ -13,7 +13,7 @@ export const supabase =
     ? createClient(supabaseUrl, supabaseAnonKey)
     : null;
 
-// ─── Row type (matches Supabase table columns) ────────────────────────────────
+// ─── Row type ─────────────────────────────────────────────────────────────────
 
 interface BlockRow {
   id: string;
@@ -26,6 +26,7 @@ interface BlockRow {
   shape_cols: number;
   shape_rows: number;
   repeat: string;
+  date: string; // FIX: date field qo'shildi
 }
 
 function rowToBlock(row: BlockRow): Block {
@@ -39,6 +40,7 @@ function rowToBlock(row: BlockRow): Block {
     startSlot: row.start_slot,
     shape: { cols: row.shape_cols, rows: row.shape_rows },
     repeat: row.repeat as RepeatType,
+    date: row.date, // FIX: date maplash
   };
 }
 
@@ -54,10 +56,11 @@ function blockToRow(block: Block): BlockRow {
     shape_cols: block.shape.cols,
     shape_rows: block.shape.rows,
     repeat: block.repeat,
+    date: block.date, // FIX: date saqlash
   };
 }
 
-// ─── CRUD helpers ─────────────────────────────────────────────────────────────
+// ─── CRUD ─────────────────────────────────────────────────────────────────────
 
 export async function fetchAllBlocksFromSupabase(): Promise<Block[]> {
   if (!supabase) return [];
