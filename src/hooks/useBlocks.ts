@@ -9,6 +9,7 @@ interface UseBlocksReturn {
   addBlock: (block: Block) => Promise<void>;
   updateBlocks: (blocks: Block[]) => Promise<void>;
   removeBlock: (id: string) => Promise<void>;
+  editBlock: (block: Block) => Promise<void>;
 }
 
 function getDayOfWeek(dateStr: string): number {
@@ -126,5 +127,16 @@ export function useBlocks(date: string): UseBlocksReturn {
     await deleteBlock(realId).catch(() => {});
   }, []);
 
-  return { blocks, loading, addBlock, updateBlocks, removeBlock };
+  const editBlock = useCallback(async (updated: Block) => {
+    const isRepeatCopy = updated.id.includes("__repeat__");
+    const realId = isRepeatCopy ? updated.id.split("__repeat__")[0] : updated.id;
+    const blockToSave: Block = { ...updated, id: realId, date };
+    setBlocks((prev) => {
+      const withoutOld = prev.filter((b) => b.id !== updated.id && b.id !== realId);
+      return [...withoutOld, blockToSave];
+    });
+    await updateBlock(blockToSave).catch(() => {});
+  }, [date]);
+
+  return { blocks, loading, addBlock, updateBlocks, removeBlock, editBlock };
 }
