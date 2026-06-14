@@ -49,6 +49,15 @@ const REPEAT_LABELS: Record<RepeatType, string> = {
   [RepeatType.HarYil]:          "Har yil",
 };
 
+// Soat tanlash uchun (0-23)
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+// Daqiqa tanlash: 0, 15, 30, 45
+const MINUTES = [0, 15, 30, 45];
+
+function slotFromTime(hour: number, minute: number): number {
+  return hour * 4 + Math.floor(minute / 15);
+}
+
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 mb-2">
@@ -71,19 +80,32 @@ interface FormState {
   category: Category;
   color: string;
   repeat: RepeatType;
+  startHour: number;
+  startMinute: number;
 }
 
-const DEFAULT_FORM: FormState = {
-  emoji: "⭐",
-  name: "",
-  durationSlots: 4,
-  category: Category.Boshqa,
-  color: "#6366f1",
-  repeat: RepeatType.HarKuni,
-};
+function getDefaultStartTime(): { hour: number; minute: number } {
+  const now = new Date();
+  const minutes = now.getMinutes();
+  const roundedMinute = Math.ceil(minutes / 15) * 15;
+  if (roundedMinute >= 60) {
+    return { hour: Math.min(23, now.getHours() + 1), minute: 0 };
+  }
+  return { hour: now.getHours(), minute: roundedMinute };
+}
 
 export default function CreateBlockModal({ isOpen, onClose, onSave, date }: CreateBlockModalProps) {
-  const [form, setForm] = useState<FormState>(DEFAULT_FORM);
+  const defaultTime = getDefaultStartTime();
+  const [form, setForm] = useState<FormState>({
+    emoji: "⭐",
+    name: "",
+    durationSlots: 4,
+    category: Category.Boshqa,
+    color: "#6366f1",
+    repeat: RepeatType.HarKuni,
+    startHour: defaultTime.hour,
+    startMinute: defaultTime.minute,
+  });
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -91,6 +113,7 @@ export default function CreateBlockModal({ isOpen, onClose, onSave, date }: Crea
 
   function handleSave() {
     if (!form.name.trim()) return;
+    const startSlot = slotFromTime(form.startHour, form.startMinute);
     const block: Block = {
       id: `block-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       emoji: form.emoji,
@@ -98,20 +121,26 @@ export default function CreateBlockModal({ isOpen, onClose, onSave, date }: Crea
       category: form.category,
       color: form.color,
       durationSlots: form.durationSlots,
-      startSlot: 0,
+      startSlot,
       shape: { cols: 1, rows: form.durationSlots },
       repeat: form.repeat,
       date,
     };
     onSave(block);
-    setForm(DEFAULT_FORM);
+    const t = getDefaultStartTime();
+    setForm((prev) => ({ ...prev, name: "", emoji: "⭐", startHour: t.hour, startMinute: t.minute }));
     onClose();
   }
 
   function handleClose() {
-    setForm(DEFAULT_FORM);
+    const t = getDefaultStartTime();
+    setForm((prev) => ({ ...prev, name: "", emoji: "⭐", startHour: t.hour, startMinute: t.minute }));
     onClose();
   }
+
+  const endSlot = slotFromTime(form.startHour, form.startMinute) + form.durationSlots;
+  const endHour = Math.floor(endSlot / 4);
+  const endMin = (endSlot % 4) * 15;
 
   return (
     <AnimatePresence>
@@ -132,7 +161,7 @@ export default function CreateBlockModal({ isOpen, onClose, onSave, date }: Crea
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 320, damping: 34 }}
-            className="fixed bottom-0 left-0 right-0 z-50 flex flex-col rounded-t-3xl bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-800 max-h-[88vh]"
+            className="fixed bottom-0 left-0 right-0 z-50 flex flex-col rounded-t-3xl bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-800 max-h-[90vh]"
           >
             <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
               <div className="w-10 h-1 rounded-full bg-zinc-700" />
@@ -142,6 +171,8 @@ export default function CreateBlockModal({ isOpen, onClose, onSave, date }: Crea
             </div>
 
             <div className="overflow-y-auto flex-1 px-5 pb-2 space-y-5">
+
+              {/* Emoji */}
               <div>
                 <SectionLabel>Emoji</SectionLabel>
                 <div className="grid grid-cols-10 gap-1">
@@ -155,6 +186,7 @@ export default function CreateBlockModal({ isOpen, onClose, onSave, date }: Crea
                 </div>
               </div>
 
+              {/* Nomi */}
               <div>
                 <SectionLabel>Nomi</SectionLabel>
                 <input type="text" value={form.name} onChange={(e) => set("name", e.target.value)}
@@ -162,6 +194,53 @@ export default function CreateBlockModal({ isOpen, onClose, onSave, date }: Crea
                   className="w-full bg-zinc-800/70 border border-zinc-700/60 rounded-xl px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-zinc-600 transition-colors" />
               </div>
 
+              {/* Vaqt tanlash */}
+              <div>
+                <SectionLabel>Boshlanish vaqti</SectionLabel>
+                <div className="flex gap-2 items-center">
+                  {/* Soat */}
+                  <div className="flex-1">
+                    <select
+                      value={form.startHour}
+                      onChange={(e) => set("startHour", Number(e.target.value))}
+                      className="w-full bg-zinc-800/70 border border-zinc-700/60 rounded-xl px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-zinc-600 appearance-none text-center"
+                    >
+                      {HOURS.map((h) => (
+                        <option key={h} value={h}>
+                          {String(h).padStart(2, "0")}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[10px] text-zinc-600 text-center mt-1">soat</p>
+                  </div>
+                  <span className="text-zinc-500 font-bold text-lg pb-4">:</span>
+                  {/* Daqiqa */}
+                  <div className="flex-1">
+                    <select
+                      value={form.startMinute}
+                      onChange={(e) => set("startMinute", Number(e.target.value))}
+                      className="w-full bg-zinc-800/70 border border-zinc-700/60 rounded-xl px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-zinc-600 appearance-none text-center"
+                    >
+                      {MINUTES.map((m) => (
+                        <option key={m} value={m}>
+                          {String(m).padStart(2, "0")}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[10px] text-zinc-600 text-center mt-1">daqiqa</p>
+                  </div>
+                  <div className="flex-1 bg-zinc-800/40 rounded-xl px-3 py-2.5 text-center">
+                    <p className="text-xs text-zinc-400 font-medium">
+                      {String(form.startHour).padStart(2, "0")}:{String(form.startMinute).padStart(2, "0")}
+                      {" → "}
+                      {String(endHour % 24).padStart(2, "0")}:{String(endMin).padStart(2, "0")}
+                    </p>
+                    <p className="text-[10px] text-zinc-600 mt-0.5">vaqt oralig'i</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Davomiyligi */}
               <div>
                 <SectionLabel>Davomiyligi</SectionLabel>
                 <div className="grid grid-cols-4 gap-2">
@@ -175,6 +254,7 @@ export default function CreateBlockModal({ isOpen, onClose, onSave, date }: Crea
                 </div>
               </div>
 
+              {/* Kategoriya */}
               <div>
                 <SectionLabel>Kategoriya</SectionLabel>
                 <div className="flex flex-wrap gap-2">
@@ -196,6 +276,7 @@ export default function CreateBlockModal({ isOpen, onClose, onSave, date }: Crea
                 </div>
               </div>
 
+              {/* Rang */}
               <div>
                 <SectionLabel>Rang</SectionLabel>
                 <div className="flex flex-wrap gap-2.5">
@@ -215,6 +296,7 @@ export default function CreateBlockModal({ isOpen, onClose, onSave, date }: Crea
                 </div>
               </div>
 
+              {/* Takrorlanish */}
               <div>
                 <SectionLabel>Takrorlanish</SectionLabel>
                 <div className="grid grid-cols-2 gap-2">
