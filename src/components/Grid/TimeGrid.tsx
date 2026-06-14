@@ -37,12 +37,9 @@ function buildOccupancyMap(blocks: Block[]): Map<number, string> {
   return map;
 }
 
-// ─── Droppable slot ───────────────────────────────────────────────────────────
-
 function DroppableSlot({ index, isOccupied }: { index: number; isOccupied: boolean }) {
   const { setNodeRef, isOver } = useDroppable({ id: `slot-${index}` });
   const isHourMark = index % 4 === 0;
-
   return (
     <div
       ref={setNodeRef}
@@ -50,10 +47,7 @@ function DroppableSlot({ index, isOccupied }: { index: number; isOccupied: boole
       className={[
         "w-full box-border transition-colors duration-75",
         !isOccupied
-          ? [
-              "border-b border-zinc-800/50",
-              isHourMark ? "border-t border-t-zinc-700/70" : "",
-            ].join(" ")
+          ? ["border-b border-zinc-800/50", isHourMark ? "border-t border-t-zinc-700/70" : ""].join(" ")
           : "",
         isOver && !isOccupied ? "bg-white/[0.06]" : "",
         isOver && isOccupied ? "bg-red-500/10" : "",
@@ -62,19 +56,18 @@ function DroppableSlot({ index, isOccupied }: { index: number; isOccupied: boole
   );
 }
 
-// ─── Draggable block ──────────────────────────────────────────────────────────
-
 function DraggableBlock({
   block,
   isActive,
   onRemove,
+  onEdit,
 }: {
   block: Block;
   isActive: boolean;
   onRemove: (id: string) => void;
+  onEdit: (block: Block) => void;
 }) {
   const { attributes, listeners, setNodeRef } = useDraggable({ id: block.id });
-
   return (
     <motion.div
       layout
@@ -93,35 +86,30 @@ function DraggableBlock({
       }}
       transition={{ type: "spring", stiffness: 380, damping: 30 }}
     >
-      <TimeBlock block={block} onRemove={onRemove} />
+      <TimeBlock block={block} onRemove={onRemove} onEdit={onEdit} />
     </motion.div>
   );
 }
-
-// ─── TimeGrid ─────────────────────────────────────────────────────────────────
 
 interface TimeGridProps {
   blocks: Block[];
   onBlocksChange: (blocks: Block[]) => void;
   onRemoveBlock: (id: string) => void;
+  onEditBlock: (block: Block) => void;
 }
 
-export default function TimeGrid({ blocks, onBlocksChange, onRemoveBlock }: TimeGridProps) {
+export default function TimeGrid({ blocks, onBlocksChange, onRemoveBlock, onEditBlock }: TimeGridProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Joriy soatga scroll
   useEffect(() => {
     const now = new Date();
     const currentSlot = now.getHours() * 4 + Math.floor(now.getMinutes() / 15);
     const scrollTo = Math.max(0, (currentSlot - 4) * SLOT_HEIGHT);
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollTo;
-    }
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollTo;
   }, []);
 
   const occupancyMap = useMemo(() => buildOccupancyMap(blocks), [blocks]);
-
   const activeBlock = useMemo(
     () => (activeId ? blocks.find((b) => b.id === activeId) ?? null : null),
     [activeId, blocks],
@@ -129,9 +117,7 @@ export default function TimeGrid({ blocks, onBlocksChange, onRemoveBlock }: Time
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 200, tolerance: 8 },
-    }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
   );
 
   function handleDragStart({ active }: DragStartEvent) {
@@ -141,41 +127,27 @@ export default function TimeGrid({ blocks, onBlocksChange, onRemoveBlock }: Time
   function handleDragEnd({ active, over }: DragEndEvent) {
     setActiveId(null);
     if (!over) return;
-
     const blockId = active.id as string;
     const targetSlot = parseInt(String(over.id).replace("slot-", ""), 10);
     const block = blocks.find((b) => b.id === blockId);
     if (!block || block.startSlot === targetSlot) return;
-
     if (targetSlot < 0 || targetSlot + block.durationSlots > TOTAL_SLOTS) {
       toast.error("Bu vaqt chegaradan tashqarida!");
       return;
     }
-
-    const conflicting = Array.from(
-      { length: block.durationSlots },
-      (_, i) => targetSlot + i,
-    ).some((s) => occupancyMap.has(s) && occupancyMap.get(s) !== blockId);
-
+    const conflicting = Array.from({ length: block.durationSlots }, (_, i) => targetSlot + i)
+      .some((s) => occupancyMap.has(s) && occupancyMap.get(s) !== blockId);
     if (conflicting) {
       toast.error("Bu vaqt band!");
       return;
     }
-
-    onBlocksChange(
-      blocks.map((b) =>
-        b.id === blockId ? { ...b, startSlot: targetSlot } : b,
-      ),
-    );
+    onBlocksChange(blocks.map((b) => b.id === blockId ? { ...b, startSlot: targetSlot } : b));
   }
 
   const slots = useMemo(() => Array.from({ length: TOTAL_SLOTS }, (_, i) => i), []);
 
-  // Joriy vaqt chizig'i
   const now = new Date();
-  const currentSlotFraction =
-    now.getHours() * 4 + now.getMinutes() / 15;
-  const nowTop = currentSlotFraction * SLOT_HEIGHT;
+  const nowTop = (now.getHours() * 4 + now.getMinutes() / 15) * SLOT_HEIGHT;
 
   return (
     <DndContext
@@ -190,14 +162,10 @@ export default function TimeGrid({ blocks, onBlocksChange, onRemoveBlock }: Time
         style={{ height: "100%", WebkitOverflowScrolling: "touch" }}
       >
         <div className="flex w-full" style={{ height: TOTAL_SLOTS * SLOT_HEIGHT, position: "relative" }}>
-          {/* Vaqt belgilari ustuni */}
-          <div className="w-10 flex-shrink-0 select-none relative">
+          {/* Vaqt ustuni */}
+          <div className="w-10 flex-shrink-0 select-none">
             {slots.map((index) => (
-              <div
-                key={index}
-                style={{ height: SLOT_HEIGHT }}
-                className="flex items-start justify-end pr-1.5"
-              >
+              <div key={index} style={{ height: SLOT_HEIGHT }} className="flex items-start justify-end pr-1.5">
                 {index % 4 === 0 && (
                   <span className="text-[9px] font-medium text-zinc-500 leading-none tracking-tight">
                     {formatHourLabel(index)}
@@ -207,37 +175,32 @@ export default function TimeGrid({ blocks, onBlocksChange, onRemoveBlock }: Time
             ))}
           </div>
 
-          {/* Slot va bloklar ustuni */}
+          {/* Bloklar ustuni */}
           <div className="flex-1 min-w-0 relative">
             {/* Joriy vaqt chizig'i */}
-            <div
-              style={{ top: nowTop, position: "absolute", left: 0, right: 0, zIndex: 20 }}
-              className="pointer-events-none"
-            >
+            <div style={{ top: nowTop, position: "absolute", left: 0, right: 0, zIndex: 20 }}
+              className="pointer-events-none">
               <div className="flex items-center">
                 <div className="w-2 h-2 rounded-full bg-indigo-400 -ml-1 flex-shrink-0" />
                 <div className="flex-1 h-px bg-indigo-400/60" />
               </div>
             </div>
 
-            {/* Droppable slotlar */}
             {slots.map((index) => (
               <DroppableSlot
                 key={index}
                 index={index}
-                isOccupied={
-                  occupancyMap.has(index) && occupancyMap.get(index) !== activeId
-                }
+                isOccupied={occupancyMap.has(index) && occupancyMap.get(index) !== activeId}
               />
             ))}
 
-            {/* Bloklar */}
             {blocks.map((block) => (
               <DraggableBlock
                 key={block.id}
                 block={block}
                 isActive={block.id === activeId}
                 onRemove={onRemoveBlock}
+                onEdit={onEditBlock}
               />
             ))}
           </div>
@@ -256,7 +219,7 @@ export default function TimeGrid({ blocks, onBlocksChange, onRemoveBlock }: Time
             }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
           >
-            <TimeBlock block={activeBlock} onRemove={onRemoveBlock} />
+            <TimeBlock block={activeBlock} onRemove={onRemoveBlock} onEdit={onEditBlock} />
           </motion.div>
         )}
       </DragOverlay>
