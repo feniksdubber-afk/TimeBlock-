@@ -20,7 +20,7 @@ function todayStr() {
 function Home() {
   const [selectedDate, setSelectedDate] = useState(todayStr());
   const [modalOpen, setModalOpen] = useState(false);
-  const { blocks, loading, addBlock, updateBlocks } = useBlocks(selectedDate);
+  const { blocks, loading, addBlock, updateBlocks, removeBlock } = useBlocks(selectedDate);
 
   if (loading) {
     return (
@@ -34,21 +34,25 @@ function Home() {
     <div
       className="flex flex-col w-full"
       style={{
-        minHeight: "100dvh",
+        height: "100dvh",
         backgroundColor: "#0f0f0f",
-        // Fix white gap at bottom
         paddingBottom: "env(safe-area-inset-bottom)",
+        overflow: "hidden",
       }}
     >
       {/* Header */}
       <DayHeader blocks={blocks} syncStatus="idle" selectedDate={selectedDate} />
 
-      {/* Week calendar strip */}
+      {/* Haftalik calendar */}
       <WeekCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
 
-      {/* Grid — fills remaining space */}
-      <div className="flex-1 relative">
-        <TimeGrid blocks={blocks} onBlocksChange={updateBlocks} />
+      {/* Grid — qolgan joy */}
+      <div className="flex-1 relative min-h-0">
+        <TimeGrid
+          blocks={blocks}
+          onBlocksChange={updateBlocks}
+          onRemoveBlock={removeBlock}
+        />
       </div>
 
       {/* FAB */}
