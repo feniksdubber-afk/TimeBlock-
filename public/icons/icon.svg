@@ -1,1 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0f0f0f"/>
+    </linearGradient>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+    <linearGradient id="g4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+    <clipPath id="round">
+      <rect width="512" height="512" rx="112" ry="112"/>
+    </clipPath>
+  </defs>
 
+  <!-- App background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- Grid column divider -->
+  <line x1="256" y1="80" x2="256" y2="432" stroke="#2a2a3e" stroke-width="2"/>
+
+  <!-- Time tick marks (left column) -->
+  <rect x="96" y="80"  width="28" height="3" rx="1.5" fill="#2a2a3e"/>
+  <rect x="96" y="170" width="28" height="3" rx="1.5" fill="#2a2a3e"/>
+  <rect x="96" y="260" width="28" height="3" rx="1.5" fill="#2a2a3e"/>
+  <rect x="96" y="350" width="28" height="3" rx="1.5" fill="#2a2a3e"/>
+  <!-- Time tick marks (right column) -->
+  <rect x="268" y="80"  width="28" height="3" rx="1.5" fill="#2a2a3e"/>
+  <rect x="268" y="170" width="28" height="3" rx="1.5" fill="#2a2a3e"/>
+  <rect x="268" y="260" width="28" height="3" rx="1.5" fill="#2a2a3e"/>
+  <rect x="268" y="350" width="28" height="3" rx="1.5" fill="#2a2a3e"/>
+
+  <!-- Left panel blocks -->
+  <!-- Block 1: indigo, tall (sleep) -->
+  <rect x="128" y="80" width="112" height="168" rx="16" fill="url(#g1)" opacity="0.92"/>
+  <!-- Block 2: cyan, medium (work) -->
+  <rect x="128" y="262" width="112" height="96" rx="16" fill="url(#g2)" opacity="0.92"/>
+
+  <!-- Right panel blocks -->
+  <!-- Block 3: amber, short (meal) -->
+  <rect x="296" y="80" width="112" height="44" rx="16" fill="url(#g4)" opacity="0.92"/>
+  <!-- Block 4: green, medium (sport) -->
+  <rect x="296" y="210" width="112" height="72" rx="16" fill="url(#g3)" opacity="0.92"/>
+
+  <!-- Subtle shine on blocks -->
+  <rect x="128" y="80"  width="112" height="20" rx="16" fill="white" opacity="0.06"/>
+  <rect x="128" y="262" width="112" height="14" rx="14" fill="white" opacity="0.06"/>
+  <rect x="296" y="80"  width="112" height="14" rx="14" fill="white" opacity="0.06"/>
+  <rect x="296" y="210" width="112" height="14" rx="14" fill="white" opacity="0.06"/>
+</svg>
